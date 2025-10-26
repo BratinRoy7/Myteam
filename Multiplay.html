@@ -1,0 +1,1204 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GameHub - Multiplay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4798697297537596" crossorigin="anonymous"></script>
+  <style>
+    body {
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+    /* Loading Screen */
+    #loadingScreen {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #0a1128; /* Deep blue background */
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 2000;
+      transition: opacity 0.4s;
+    }
+    #loadingLogo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.7));
+      animation: pulse 1.2s infinite alternate;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1);}
+      100% { transform: scale(1.07);}
+    }
+    #loadingBar {
+      width: 300px; height: 20px;
+      background: #1e293b;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    #loadingProgress {
+      width: 0%; height: 100%;
+      background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+      transition: width 0.3s;
+    }
+
+    /* Main Menu Styles */
+    #mainMenu {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100vw;
+      background: #0f172a;
+    }
+    .app-name {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #60a5fa;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 8px #00000080;
+    }
+    .welcome {
+      font-family: 'Brush Script MT', cursive;
+      color: #38bdf8;
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 1px 6px #00000080;
+    }
+    .datetime {
+      font-size: 1.1rem;
+      color: #fbbf24;
+      margin-bottom: 22px;
+      text-shadow: 0 2px 6px #00000080;
+      letter-spacing: 1px;
+    }
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 10px;
+    }
+    .game-card {
+      width: 280px;
+      height: 180px;
+      background: #1e293b;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .game-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    .game-preview {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+    }
+    .game-btn {
+      width: 100%;
+      padding: 12px 0;
+      background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .game-btn:hover {
+      background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+    }
+    .developer {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin-top: 30px;
+    }
+
+    /* Advertisement Styles */
+    .ad-container {
+      width: 100%;
+      max-width: 320px;
+      margin: 20px 0;
+      background: #1e293b;
+      border-radius: 8px;
+      overflow: hidden;
+      text-align: center;
+      padding: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+    .ad-label {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-bottom: 5px;
+    }
+
+    /* Hidden screens */
+    #flappyBirdScreen, #ticTacToeScreen {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #0f172a;
+      z-index: 100;
+    }
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 101;
+    }
+
+    /* Flappy Bird Styles */
+    #gameCanvas {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(180deg, #a8edea 0%, #fed6e3 100%);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      border-radius: 16px;
+    }
+    .top-bar {
+      position: absolute;
+      top: 18px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .btn {
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 22px;
+      font-size: 1.08em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      cursor: pointer;
+      opacity: 0.95;
+      transition: background 0.2s, color 0.2s;
+      pointer-events: all;
+      outline: none;
+    }
+    .btn:hover, .btn:focus { background: #fbbf24; color: #222; }
+    #gameOverMsg {
+      display: none;
+      position: absolute;
+      top: 45%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.93);
+      color: #333;
+      padding: 32px 48px;
+      border-radius: 16px;
+      font-size: 2em;
+      font-weight: bold;
+      z-index: 20;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    #scoreBarContainer {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 18px;
+      background: #e0e0e0;
+      border-radius: 12px;
+      margin-top: 10px;
+      z-index: 15;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      overflow: hidden;
+      border: 2px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    #scoreBar {
+      height: 100%;
+      background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+      border-radius: 12px 0 0 12px;
+      transition: width 0.2s;
+      min-width: 0;
+    }
+    #scoreLabel {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1em;
+      color: #333;
+      font-weight: bold;
+      z-index: 16;
+      margin-top: 30px;
+      text-shadow: 0 1px 4px #fff, 0 0 2px #fbbf24;
+      pointer-events: none;
+    }
+
+    /* Tic Tac Toe Styles */
+    #ticTacToeGame {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+    #welcomeTicTac {
+      font-size: 2.5em;
+      color: #38bdf8;
+      font-family: 'Brush Script MT', cursive;
+      margin-top: 20px;
+    }
+    #statusTicTac {
+      margin: 1rem 0;
+      font-size: 1.2em;
+      color: white;
+    }
+    #boardTicTac {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 10px;
+      margin: 1rem 0;
+    }
+    .cellTicTac {
+      width: 100px; height: 100px;
+      background: #fbbf24;
+      display: flex;
+      align-items: center; justify-content: center;
+      font-size: 3rem; 
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+      color: #333;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    .cellTicTac:hover {
+      background: #fcd34d;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    .cellTicTac.disabled { 
+      pointer-events: none; 
+      background: #fcd34d;
+    }
+    .mark { animation: pop 0.3s ease-in-out; }
+    @keyframes pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    #controlsTicTac button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #controlsTicTac button:hover { background: #2563eb; }
+    #modeDialogTicTac, #whoStartsDialogTicTac {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    #whoStartsDialogTicTac { z-index: 201; }
+    #modeDialogContentTicTac, #whoStartsDialogContentTicTac {
+      background: #1e293b;
+      padding: 2em 3em;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      text-align: center;
+      color: white;
+    }
+    #modeDialogContentTicTac h2, #whoStartsDialogContentTicTac h3 {
+      margin-bottom: 1em;
+      color: #38bdf8;
+    }
+    #modeDialogContentTicTac button, #whoStartsDialogContentTicTac button {
+      margin: 1em;
+      padding: 0.8em 2em;
+      font-size: 1.1em;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #modeDialogContentTicTac button:hover, #whoStartsDialogContentTicTac button:hover {
+      background: #2563eb;
+    }
+    @media (max-width: 500px) {
+      .top-bar { gap: 8px; }
+      .btn { padding: 9px 12px; font-size: 0.98em; }
+      #scoreBarContainer { width: 90vw; }
+      .game-card { width: 90%; }
+      #boardTicTac { grid-template-columns: repeat(3, 80px);}
+      .cellTicTac { width: 80px; height: 80px; font-size: 2.5rem;}
+      #loadingBar { width: 90vw;}
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen (Logo) -->
+  <div id="loadingScreen">
+    <img id="loadingLogo" src="https://i.ibb.co/pvKyBdrV/ghlogo.png" alt="multiplay logo">
+    <div id="loadingBar">
+      <div id="loadingProgress"></div>
+    </div>
+  </div>
+  <!-- Main Menu Screen -->
+  <div id="mainMenu" style="display:none;">
+    <div class="app-name">GameHub</div>
+    <div class="welcome">Welcome to Multiplay Games</div>
+    <div class="datetime" id="datetime"></div>
+    <div class="game-container">
+      <div class="game-card">
+        <img class="game-preview" src="https://i.ibb.co/HDBD6KZM/tic-tac-toe.jpg" alt="Tic Tac Toe Preview">
+        <button class="game-btn" id="ticTacToeBtn">Tic Tac Toe</button>
+      </div>
+      <div class="game-card">
+        <img class="game-preview" src="https://i.ibb.co/6Rv3YhN5/flappy-bird.jpg" alt="Flappy Bird Preview">
+        <button class="game-btn" id="flappyBirdBtn">Flappy Bird</button>
+      </div>
+    </div>
+    <!-- Advertisement Container -->
+    <div class="ad-container">
+      <div class="ad-label">Advertisement</div>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-4798697297537596"
+           data-ad-slot="5238489978"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </div>
+    <div class="developer">Developed by GameWell Corporation</div>
+  </div>
+  <!-- Flappy Bird Game Screen -->
+  <div id="flappyBirdScreen">
+    <button class="back-btn" id="backFromFlappy">← Back</button>
+    <div class="top-bar">
+      <button class="btn" id="pauseBtn">Pause</button>
+      <button class="btn" id="restartBtn">Restart</button>
+      <button class="btn" id="exitBtnFlappy">Exit</button>
+    </div>
+    <div id="scoreBarContainer">
+      <div id="scoreBar" style="width:0%"></div>
+    </div>
+    <div id="scoreLabel">Score: 0</div>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <div id="gameOverMsg">Game Over<br><span style="font-size:0.6em;" id="finalScore"></span></div>
+  </div>
+  <!-- Tic Tac Toe Game Screen -->
+  <div id="ticTacToeScreen">
+    <button class="back-btn" id="backFromTicTac">← Back</button>
+    <div id="modeDialogTicTac">
+      <div id="modeDialogContentTicTac">
+        <h2>Choose Game Mode</h2>
+        <button id="vsHumanBtn">2 Player</button>
+        <button id="vsAIBtn">Play vs AI</button>
+      </div>
+    </div>
+    <div id="whoStartsDialogTicTac">
+      <div id="whoStartsDialogContentTicTac">
+        <h3>Who should start?</h3>
+        <button id="startXBtn">Player (X)</button>
+        <button id="startOBtn">AI (O)</button>
+      </div>
+    </div>
+    <div id="ticTacToeGame">
+      <div id="welcomeTicTac">Tic Tac Toe</div>
+      <div id="statusTicTac">Player X's turn</div>
+      <div id="boardTicTac"></div>
+      <div id="controlsTicTac">
+        <button id="pauseBtnTicTac">Pause</button>
+        <button id="restartBtnTicTac">Restart</button>
+        <button id="exitBtnTicTac">Exit</button>
+      </div>
+    </div>
+  </div>
+  <!-- Audio Elements -->
+  <audio id="moveSound" src="https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3"></audio>
+  <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
+  <audio id="drawSound" src="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-lose-2027.mp3"></audio>
+  <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
+  <audio id="aiMoveSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
+  <script>
+    // --- Loading Screen Logic ---
+    function showMainMenu() {
+      document.getElementById('loadingScreen').style.opacity = 0;
+      setTimeout(() => {
+        document.getElementById('loadingScreen').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+      }, 400);
+    }
+    // Simulate loading
+    let loadProgress = 0;
+    function fakeLoading() {
+      loadProgress += Math.random() * 25;
+      document.getElementById('loadingProgress').style.width = Math.min(loadProgress, 100) + '%';
+      if (loadProgress < 100) {
+        setTimeout(fakeLoading, 200);
+      } else {
+        setTimeout(showMainMenu, 600);
+      }
+    }
+    window.onload = fakeLoading;
+
+    // --- Date and Time (IST) in Main Menu ---
+    function updateISTDateTime() {
+      const dtElem = document.getElementById('datetime');
+      const now = new Date();
+      // Convert to IST (UTC +5:30)
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const istTime = new Date(utc + (5.5 * 3600000));
+      // Format: Monday, May 26, 2025, 13:07:00 IST
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      const dateStr = istTime.toLocaleDateString('en-IN', options);
+      const timeStr = istTime.toLocaleTimeString('en-IN', { hour12: false });
+      dtElem.textContent = `${dateStr}, ${timeStr} IST`;
+    }
+    setInterval(updateISTDateTime, 1000);
+
+    // --- Main Menu Navigation ---
+    document.addEventListener('DOMContentLoaded', function() {
+      // Button event listeners
+      document.getElementById('ticTacToeBtn').addEventListener('click', function() {
+        document.getElementById('clickSound').currentTime = 0;
+        document.getElementById('clickSound').play();
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('ticTacToeScreen').style.display = 'block';
+        document.getElementById('modeDialogTicTac').style.display = 'flex';
+      });
+      document.getElementById('flappyBirdBtn').addEventListener('click', function() {
+        document.getElementById('clickSound').currentTime = 0;
+        document.getElementById('clickSound').play();
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('flappyBirdScreen').style.display = 'block';
+        startFlappyBird();
+      });
+      document.getElementById('backFromFlappy').addEventListener('click', function() {
+        document.getElementById('clickSound').currentTime = 0;
+        document.getElementById('clickSound').play();
+        document.getElementById('flappyBirdScreen').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+        resetFlappyBird();
+      });
+      document.getElementById('backFromTicTac').addEventListener('click', function() {
+        document.getElementById('clickSound').currentTime = 0;
+        document.getElementById('clickSound').play();
+        document.getElementById('ticTacToeScreen').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+      });
+      updateISTDateTime();
+    });
+
+    // ---- Flappy Bird Game Code ----
+    let animationId = null;
+    let flappyInitialized = false;
+    let flappyState = {};
+
+    function startFlappyBird() {
+      if (!flappyInitialized) {
+        initFlappyBird();
+        flappyInitialized = true;
+      } else {
+        resetFlappyBird();
+        flappyState.drawStartScreen();
+        flappyState.updateScoreBar();
+      }
+    }
+    function resetFlappyBird() {
+      cancelAnimationFrame(animationId);
+      if (flappyState && typeof flappyState.resetGame === "function") {
+        flappyState.resetGame();
+      }
+    }
+
+    function initFlappyBird() {
+      // --- Audio Functions ---
+      function playTapSound() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(660, ctx.currentTime + 0.07);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.13);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.13);
+          osc.onended = () => ctx.close();
+        } catch (e) {}
+      }
+      function playBestTapSound() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc1 = ctx.createOscillator();
+          const gain1 = ctx.createGain();
+          osc1.type = 'triangle';
+          osc1.frequency.setValueAtTime(600, ctx.currentTime);
+          gain1.gain.setValueAtTime(0.22, ctx.currentTime);
+          gain1.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.09);
+          osc1.connect(gain1);
+          gain1.connect(ctx.destination);
+          osc1.start();
+          osc1.stop(ctx.currentTime + 0.09);
+
+          const osc2 = ctx.createOscillator();
+          const gain2 = ctx.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.09);
+          gain2.gain.setValueAtTime(0.20, ctx.currentTime + 0.09);
+          gain2.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.18);
+          osc2.connect(gain2);
+          gain2.connect(ctx.destination);
+          osc2.start(ctx.currentTime + 0.09);
+          osc2.stop(ctx.currentTime + 0.18);
+
+          osc2.onended = () => ctx.close();
+        } catch (e) {}
+      }
+      function playDefeatSound() {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(340, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.23, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+          osc.onended = () => ctx.close();
+        } catch (e) {}
+      }
+
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width, height = canvas.height;
+
+      // Bird properties
+      const bird = {
+        x: 80,
+        y: height/2,
+        w: 38, h: 28,
+        vy: 0,
+        gravity: 0.5,
+        jump: -7
+      };
+
+      // Pipe properties
+      let pipes = [];
+      const pipeW = 60, pipeGap = 150, pipeSpeed = 2.8;
+
+      // Game state
+      let score = 0, bestScore = 0;
+      let gameRunning = false, gamePaused = false, gameOver = false;
+
+      // Score Bar
+      const scoreBar = document.getElementById('scoreBar');
+      const scoreLabel = document.getElementById('scoreLabel');
+      function updateScoreBar() {
+        let percent = Math.min(score, 50) * 2; // 0-100%
+        scoreBar.style.width = percent + '%';
+        scoreLabel.textContent = 'Score: ' + score;
+      }
+
+      // Tap/Click to flap and increase score
+      function flapAndScore() {
+        if (!gameRunning && !gameOver) startGame();
+        if (!gamePaused && !gameOver) {
+          bird.vy = bird.jump;
+          score++;
+          if (score > bestScore) {
+            bestScore = score;
+            playBestTapSound();
+          } else {
+            playTapSound();
+          }
+          updateScoreBar();
+        }
+      }
+      canvas.addEventListener('touchstart', e => { e.preventDefault(); flapAndScore(); });
+      canvas.addEventListener('mousedown', flapAndScore);
+
+      // Buttons
+      document.getElementById('pauseBtn').onclick = function() {
+        if (!gameRunning || gameOver) return;
+        gamePaused = !gamePaused;
+        this.textContent = gamePaused ? 'Resume' : 'Pause';
+        if (!gamePaused) gameLoop();
+        else cancelAnimationFrame(animationId);
+      };
+      document.getElementById('restartBtn').onclick = function() {
+        resetGame();
+        startGame();
+      };
+      document.getElementById('exitBtnFlappy').onclick = function() {
+        document.getElementById('flappyBirdScreen').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'flex';
+        resetGame();
+      };
+
+      // Game Over Message
+      const gameOverMsg = document.getElementById('gameOverMsg');
+      const finalScore = document.getElementById('finalScore');
+
+      // Start/Reset
+      function resetGame() {
+        bird.y = height/2;
+        bird.vy = 0;
+        pipes = [];
+        score = 0;
+        gameRunning = false;
+        gamePaused = false;
+        gameOver = false;
+        document.getElementById('pauseBtn').textContent = 'Pause';
+        gameOverMsg.style.display = 'none';
+        cancelAnimationFrame(animationId);
+        updateScoreBar();
+      }
+
+      function startGame() {
+        resetGame();
+        gameRunning = true;
+        gameLoop();
+      }
+
+      // Drawing functions
+      function drawBird() {
+        ctx.save();
+        ctx.translate(bird.x, bird.y);
+
+        // Shadow
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.beginPath();
+        ctx.ellipse(8, bird.h/2+6, bird.w*0.6, bird.h*0.33, 0, 0, Math.PI*2);
+        ctx.fillStyle = "#333";
+        ctx.fill();
+        ctx.restore();
+
+        // Tail (3 feathers)
+        for (let i = 0; i < 3; i++) {
+          ctx.save();
+          ctx.rotate(-0.3 + i*0.25);
+          ctx.beginPath();
+          ctx.ellipse(-bird.w/2+2, 7-i*2, 6, 3, 0, 0, Math.PI*2);
+          ctx.fillStyle = i === 1 ? "#b1e05f" : "#8bc34a";
+          ctx.globalAlpha = 0.8;
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Body
+        let gradBody = ctx.createLinearGradient(-bird.w/2, 0, bird.w/2, 0);
+        gradBody.addColorStop(0, "#ffe066");
+        gradBody.addColorStop(0.35, "#f9d423");
+        gradBody.addColorStop(1, "#ff9800");
+        ctx.beginPath();
+        ctx.ellipse(0, 0, bird.w/2, bird.h/2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = gradBody;
+        ctx.fill();
+
+        // Head (slightly above body)
+        let gradHead = ctx.createRadialGradient(10, -8, 2, 10, -8, 14);
+        gradHead.addColorStop(0, "#fffde4");
+        gradHead.addColorStop(0.7, "#ffe066");
+        gradHead.addColorStop(1, "#ff9800");
+        ctx.beginPath();
+        ctx.ellipse(10, -8, bird.w/2.5, bird.h/2.5, 0, 0, Math.PI*2);
+        ctx.fillStyle = gradHead;
+        ctx.fill();
+
+        // Wing (animated)
+        ctx.save();
+        ctx.rotate(-0.2 + Math.sin(Date.now()/180) * 0.18);
+        ctx.beginPath();
+        ctx.ellipse(-7, 5, bird.w/4, bird.h/3, Math.PI/7, 0, Math.PI*2);
+        ctx.fillStyle = "#fffbe7";
+        ctx.globalAlpha = 0.93;
+        ctx.fill();
+        ctx.restore();
+
+        // Belly highlight
+        ctx.beginPath();
+        ctx.ellipse(-7, 8, bird.w/6, bird.h/5, 0, 0, Math.PI*2);
+        ctx.fillStyle = "#fff";
+        ctx.globalAlpha = 0.6;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        // Beak (two-tone)
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(bird.w/2-2, -2);
+        ctx.lineTo(bird.w/2+10, -7);
+        ctx.lineTo(bird.w/2+10, 2);
+        ctx.closePath();
+        ctx.fillStyle = "#f7ca18";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(bird.w/2+10, -7);
+        ctx.lineTo(bird.w/2+10, 2);
+        ctx.lineTo(bird.w/2+4, -2);
+        ctx.closePath();
+        ctx.fillStyle = "#ff9800";
+        ctx.fill();
+        ctx.restore();
+
+        // Eye white
+        ctx.beginPath();
+        ctx.arc(19, -12, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        // Eye iris
+        ctx.beginPath();
+        ctx.arc(20, -12, 1.7, 0, Math.PI * 2);
+        ctx.fillStyle = '#222';
+        ctx.fill();
+        // Eye shine
+        ctx.beginPath();
+        ctx.arc(21, -13, 0.7, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.globalAlpha = 0.8;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.restore();
+      }
+
+      function drawPipes() {
+        pipes.forEach(pipe => {
+          ctx.save();
+          // Pipe body gradient
+          let grad = ctx.createLinearGradient(pipe.x, 0, pipe.x + pipeW, 0);
+          grad.addColorStop(0, "#388e3c");
+          grad.addColorStop(0.3, "#66bb6a");
+          grad.addColorStop(1, "#2e7d32");
+          ctx.fillStyle = grad;
+          // Top pipe
+          ctx.fillRect(pipe.x, 0, pipeW, pipe.top);
+          // Bottom pipe
+          ctx.fillRect(pipe.x, pipe.top + pipeGap, pipeW, height - pipe.top - pipeGap);
+          // Pipe rim (top)
+          ctx.fillStyle = "#b2ff59";
+          ctx.fillRect(pipe.x - 4, pipe.top - 18, pipeW + 8, 18);
+          ctx.fillRect(pipe.x - 4, pipe.top + pipeGap, pipeW + 8, 18);
+          // Pipe shadow for 3D effect
+          ctx.globalAlpha = 0.18;
+          ctx.fillStyle = "#222";
+          ctx.fillRect(pipe.x + pipeW - 10, 0, 10, pipe.top);
+          ctx.fillRect(pipe.x + pipeW - 10, pipe.top + pipeGap, 10, height - pipe.top - pipeGap);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+        });
+      }
+
+      function drawScore() {
+        ctx.font = 'bold 40px Segoe UI, Arial';
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.textAlign = 'center';
+        ctx.fillText(score, width/2, 70);
+        ctx.strokeText(score, width/2, 70);
+      }
+
+      function drawStartScreen() {
+        ctx.clearRect(0,0,width,height);
+        ctx.font = 'bold 38px Segoe UI, Arial';
+        ctx.fillStyle = '#ff6f61';
+        ctx.textAlign = 'center';
+        ctx.fillText('Flappy Bird', width/2, 180);
+        ctx.font = '24px Segoe UI, Arial';
+        ctx.fillStyle = '#333';
+        ctx.fillText('Tap to Start', width/2, 260);
+        ctx.font = '18px Segoe UI, Arial';
+        ctx.fillStyle = '#555';
+        ctx.fillText('Best Score: ' + bestScore, width/2, 320);
+        // Draw bird demo
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        ctx.translate(width/2, 400);
+        ctx.rotate(-0.1);
+        drawBird();
+        ctx.restore();
+      }
+
+      // Game Loop
+      function gameLoop() {
+        if (gamePaused || !gameRunning) return;
+
+        ctx.clearRect(0,0,width,height);
+
+        // Move bird
+        bird.vy += bird.gravity;
+        bird.y += bird.vy;
+
+        // Add pipes
+        if (pipes.length === 0 || pipes[pipes.length-1].x < width - 220) {
+          const top = Math.random() * (height - pipeGap - 120) + 40;
+          pipes.push({ x: width, top: top, color: "#66bb6a", passed: false });
+        }
+
+        // Move pipes
+        pipes.forEach(pipe => pipe.x -= pipeSpeed);
+
+        // Remove off-screen pipes
+        pipes = pipes.filter(pipe => pipe.x + pipeW > 0);
+
+        // Draw pipes and bird
+        drawPipes();
+        drawBird();
+        drawScore();
+
+        // Collision detection
+        pipes.forEach(pipe => {
+          if (
+            bird.x + bird.w/2 > pipe.x && bird.x - bird.w/2 < pipe.x + pipeW &&
+            (bird.y - bird.h/2 < pipe.top || bird.y + bird.h/2 > pipe.top + pipeGap)
+          ) {
+            endGame();
+          }
+          // Score for passing pipe (no longer increases score, as tap increases score)
+          if (!pipe.passed && pipe.x + pipeW < bird.x - bird.w/2) {
+            pipe.passed = true;
+          }
+        });
+
+        // Ground/ceiling collision
+        if (bird.y + bird.h/2 > height || bird.y - bird.h/2 < 0) {
+          endGame();
+        }
+
+        if (!gameOver) {
+          animationId = requestAnimationFrame(gameLoop);
+        }
+      }
+
+      function endGame() {
+        gameOver = true;
+        gameRunning = false;
+        cancelAnimationFrame(animationId);
+        playDefeatSound(); // Play defeat sound!
+        finalScore.innerHTML = `Score: <b>${score}</b><br>Best: <b>${bestScore}</b>`;
+        gameOverMsg.style.display = 'block';
+      }
+
+      // Initial draw
+      drawStartScreen();
+      updateScoreBar();
+
+      // Restart game on tap/click after game over
+      canvas.addEventListener('touchend', function(e) {
+        if (gameOver) {
+          resetGame();
+          startGame();
+        }
+      });
+      canvas.addEventListener('mouseup', function(e) {
+        if (gameOver) {
+          resetGame();
+          startGame();
+        }
+      });
+
+      // Responsive canvas
+      function resizeCanvas() {
+        let w = window.innerWidth, h = window.innerHeight;
+        let scale = Math.min(w/400, h/600);
+        canvas.style.width = (400*scale) + 'px';
+        canvas.style.height = (600*scale) + 'px';
+        document.getElementById('scoreBarContainer').style.width = (320*scale) + 'px';
+        document.getElementById('scoreBarContainer').style.fontSize = (1*scale) + 'em';
+        document.getElementById('scoreLabel').style.fontSize = (1*scale) + 'em';
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      // Expose for reset/start
+      flappyState = {
+        resetGame, drawStartScreen, updateScoreBar
+      };
+    }
+
+    // ---- Tic Tac Toe Game Code ----
+    document.addEventListener('DOMContentLoaded', function() {
+      const boardEl = document.getElementById("boardTicTac");
+      const statusEl = document.getElementById("statusTicTac");
+      const modeDialog = document.getElementById("modeDialogTicTac");
+      const whoStartsDialog = document.getElementById("whoStartsDialogTicTac");
+      const moveSound = document.getElementById("moveSound");
+      const winSound = document.getElementById("winSound");
+      const drawSound = document.getElementById("drawSound");
+      const clickSound = document.getElementById("clickSound");
+      const aiMoveSound = document.getElementById("aiMoveSound");
+
+      let board = Array(9).fill("");
+      let currentPlayer = "X";
+      let isGameActive = true;
+      let isVsAI = false;
+      let isPaused = false;
+      const winCombos = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+
+      function playActionSound() {
+        clickSound.currentTime = 0;
+        clickSound.play();
+      }
+      
+      function renderBoard() {
+        boardEl.innerHTML = "";
+        board.forEach((cell, index) => {
+          const cellEl = document.createElement("div");
+          cellEl.classList.add("cellTicTac");
+          cellEl.dataset.index = index;
+          cellEl.textContent = cell;
+          if (cell !== "" || !isGameActive || isPaused) cellEl.classList.add("disabled");
+          if (cell === "X") cellEl.style.color = "#3b82f6";
+          if (cell === "O") cellEl.style.color = "#ef4444";
+          boardEl.appendChild(cellEl);
+        });
+      }
+      
+      function checkWinner() {
+        for (let combo of winCombos) {
+          const [a,b,c] = combo;
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            isGameActive = false;
+            statusEl.textContent = `${board[a]} wins!`;
+            winSound.currentTime = 0;
+            winSound.play();
+            document.querySelectorAll(`.cellTicTac`).forEach((cell, idx) => {
+              if (combo.includes(idx)) {
+                cell.style.background = "#4CAF50";
+                cell.style.color = "white";
+              }
+            });
+            return true;
+          }
+        }
+        if (!board.includes("")) {
+          isGameActive = false;
+          statusEl.textContent = `It's a draw!`;
+          drawSound.currentTime = 0;
+          drawSound.play();
+          return true;
+        }
+        return false;
+      }
+      
+      function switchTurn() {
+        currentPlayer = currentPlayer === "X" ? "O" : "X";
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+      }
+      
+      function aiMove() {
+        if (!isGameActive || isPaused) return;
+        
+        // Play AI thinking sound
+        aiMoveSound.currentTime = 0;
+        aiMoveSound.play();
+        
+        setTimeout(() => {
+          const emptyIndices = board.map((val, idx) => val === "" ? idx : null).filter(i => i !== null);
+          
+          // Try to win if possible
+          for (let i = 0; i < winCombos.length; i++) {
+            const [a, b, c] = winCombos[i];
+            if (board[a] === "O" && board[b] === "O" && board[c] === "") {
+              makeMove(c);
+              return;
+            }
+            if (board[a] === "O" && board[c] === "O" && board[b] === "") {
+              makeMove(b);
+              return;
+            }
+            if (board[b] === "O" && board[c] === "O" && board[a] === "") {
+              makeMove(a);
+              return;
+            }
+          }
+          
+          // Block player from winning
+          for (let i = 0; i < winCombos.length; i++) {
+            const [a, b, c] = winCombos[i];
+            if (board[a] === "X" && board[b] === "X" && board[c] === "") {
+              makeMove(c);
+              return;
+            }
+            if (board[a] === "X" && board[c] === "X" && board[b] === "") {
+              makeMove(b);
+              return;
+            }
+            if (board[b] === "X" && board[c] === "X" && board[a] === "") {
+              makeMove(a);
+              return;
+            }
+          }
+          
+          // Take center if available
+          if (board[4] === "") {
+            makeMove(4);
+            return;
+          }
+          
+          // Take a corner if available
+          const corners = [0, 2, 6, 8];
+          const availableCorners = corners.filter(i => board[i] === "");
+          if (availableCorners.length > 0) {
+            const move = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+            makeMove(move);
+            return;
+          }
+          
+          // Random move
+          const move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+          makeMove(move);
+        }, 500);
+      }
+      
+      function makeMove(index) {
+        board[index] = "O";
+        moveSound.currentTime = 0;
+        moveSound.play();
+        renderBoard();
+        if (!checkWinner()) {
+          switchTurn();
+        }
+      }
+      
+      boardEl.addEventListener("click", (e) => {
+        if (!isGameActive || isPaused || e.target.classList.contains("disabled")) return;
+        const index = e.target.dataset.index;
+        if (board[index] === "") {
+          board[index] = currentPlayer;
+          moveSound.currentTime = 0;
+          moveSound.play();
+          renderBoard();
+          if (!checkWinner()) {
+            switchTurn();
+            if (isVsAI && currentPlayer === "O") {
+              aiMove();
+            }
+          }
+        }
+      });
+      
+      document.getElementById("vsHumanBtn").onclick = () => {
+        playActionSound();
+        isVsAI = false;
+        modeDialog.style.display = "none";
+        board = Array(9).fill("");
+        currentPlayer = "X";
+        isGameActive = true;
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+        renderBoard();
+      };
+      
+      document.getElementById("vsAIBtn").onclick = () => {
+        playActionSound();
+        isVsAI = true;
+        modeDialog.style.display = "none";
+        whoStartsDialog.style.display = "flex";
+      };
+      
+      document.getElementById("startXBtn").onclick = () => {
+        playActionSound();
+        currentPlayer = "X";
+        whoStartsDialog.style.display = "none";
+        board = Array(9).fill("");
+        isGameActive = true;
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+        renderBoard();
+      };
+      
+      document.getElementById("startOBtn").onclick = () => {
+        playActionSound();
+        currentPlayer = "O";
+        whoStartsDialog.style.display = "none";
+        board = Array(9).fill("");
+        isGameActive = true;
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+        renderBoard();
+        aiMove();
+      };
+      
+      document.getElementById("restartBtnTicTac").onclick = () => {
+        playActionSound();
+        board = Array(9).fill("");
+        isGameActive = true;
+        currentPlayer = "X";
+        renderBoard();
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+      };
+      
+      document.getElementById("pauseBtnTicTac").onclick = () => {
+        playActionSound();
+        isPaused = !isPaused;
+        document.getElementById("pauseBtnTicTac").textContent = isPaused ? "Resume" : "Pause";
+        statusEl.textContent = isPaused ? "Game Paused" : `Player ${currentPlayer}'s turn`;
+        renderBoard();
+      };
+      
+      document.getElementById("exitBtnTicTac").onclick = () => {
+        playActionSound();
+        document.getElementById("ticTacToeScreen").style.display = "none";
+        document.getElementById("mainMenu").style.display = "flex";
+        board = Array(9).fill("");
+        isGameActive = true;
+        currentPlayer = "X";
+      };
+      
+      // Initialize Tic Tac Toe board
+      renderBoard();
+      modeDialog.style.display = "flex";
+    });
+  </script>
+</body>
+</html>
