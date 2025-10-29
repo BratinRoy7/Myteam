@@ -13,6 +13,7 @@ import nltk
 from nltk.stem import PorterStemmer
 import random
 import hashlib
+import os
 
 # Download required NLTK data
 try:
@@ -91,7 +92,7 @@ class DiscoveryAIBrain:
             tfidf_matrix = self.vectorizer.fit_transform(all_texts)
             similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])
             return similarities[0]
-        except:
+        except Exception:
             return [0] * len(knowledge_items)
     
     def search_knowledge_base(self, query):
@@ -129,7 +130,7 @@ class DiscoveryAIBrain:
             processed_query, company_info
         )
         
-        if max(company_similarities) > 0.1:
+        if company_similarities and max(company_similarities) > 0.1:
             results.append({
                 "type": "company_info",
                 "information": self.get_company_introduction(),
@@ -143,11 +144,12 @@ class DiscoveryAIBrain:
     def get_company_introduction(self):
         """Generate comprehensive company introduction."""
         company = self.knowledge_base["company"]
+        # Fixed f-string syntax and used company['ceo'] rather than hard-coded name
         return f"""
 **WellSoft Corporation** - Pioneering AI Solutions
 
 🏢 **Company Overview:**
-- **Founded:** {company['foundation_year'] by Bratin Roy}
+- **Founded:** {company['foundation_year']}
 - **CEO & Founder:** {company['ceo']}
 - **Industry:** {company['industry']}
 - **Mission:** {company['mission']}
@@ -375,6 +377,18 @@ class DatabaseManager:
             "today_conversations": today_conversations
         }
 
+# Load Google Gemini / API key securely
+# Order of precedence: Streamlit secrets -> environment variable -> (optional) hard-coded fallback (NOT RECOMMENDED)
+GOOGLE_API_KEY = None
+if hasattr(st, "secrets") and st.secrets.get("GOOGLE_API_KEY"):
+    GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+elif os.environ.get("GOOGLE_API_KEY"):
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+else:
+    # WARNING: Hard-coding API keys is insecure. Uncomment the following line only for quick local testing.
+    # GOOGLE_API_KEY = "AIzaSyBXmfTDCqWuUGDM4kCs2RT86I4KBf1ghB4"
+    pass
+
 # Initialize global brain and DB manager using Streamlit's cache
 @st.cache_resource
 def get_ai_brain_and_db_manager():
@@ -469,8 +483,8 @@ def handle_user_input(prompt):
                 st.session_state.user_id
             )
         
-        # Add AI response to chat history
-        st.session_state.messages.append({"role": "system", "content": ai_response})
+        # Add AI response to chat history using the correct role ("assistant")
+        st.session_state.messages.append({"role": "assistant", "content": ai_response})
         
         # Store in database
         db_manager.store_conversation(
@@ -483,10 +497,11 @@ def handle_user_input(prompt):
 def display_chat_history():
     """Displays all messages in the session state."""
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if message["role"] == "system":
-                # Enhanced system message display
-                st.success(f"🤖 {message['content']}")
+        # Map any legacy 'system' role to 'assistant'
+        role = "assistant" if message.get("role") in ("system", "assistant") else "user"
+        with st.chat_message(role):
+            if role == "assistant":
+                st.markdown(f"🤖 {message['content']}")
             else:
                 st.markdown(f"👤 {message['content']}")
 
@@ -514,7 +529,6 @@ def display_company_highlights():
 
 def display_stats():
     """Displays enhanced live statistics."""
-    conv_count = len(ai_brain.conversation_history)
     db_stats = db_manager.get_conversation_stats()
     
     st.sidebar.markdown("---")
@@ -641,3 +655,5 @@ class TelegramBot:
 
 if __name__ == "__main__":
     main_streamlit()
+                
+                
